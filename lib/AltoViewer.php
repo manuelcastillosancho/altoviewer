@@ -31,6 +31,33 @@ class AltoViewer
     protected $_hScale;
 
     /**
+     * List available ALTO/image pairs in the configured directories
+     * @param string $altoDir
+     * @param string $imageDir
+     * @return array
+     */
+    public static function listAvailableFiles($altoDir, $imageDir)
+    {
+        $altoDir = rtrim($altoDir, DIRECTORY_SEPARATOR);
+        $imageDir = rtrim($imageDir, DIRECTORY_SEPARATOR);
+        $altoFiles = glob($altoDir . DIRECTORY_SEPARATOR . '*.xml');
+        if ($altoFiles === false) {
+            return array();
+        }
+        sort($altoFiles);
+        $available = array();
+        foreach ($altoFiles as $altoFile) {
+            $baseName = basename($altoFile, '.xml');
+            $imagePath = $imageDir . DIRECTORY_SEPARATOR . $baseName . '.tif.png';
+            if (file_exists($imagePath)) {
+                $available[] = $baseName;
+            }
+        }
+       
+        return $available;
+    }
+
+    /**
      * Scale Elements vertically and horizontally
      * @param mixed $altoDir Directory holding ALTO files 
      * @param mixed $altoDir Directory holding Image files

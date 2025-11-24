@@ -14,12 +14,38 @@
  **/
 
 require_once 'lib/AltoViewer.php';
- 
-$vScale = $_REQUEST['vScale'];
-$hScale = $_REQUEST['hScale'];
-$image = $_REQUEST['image'];
+
+$vScale = isset($_REQUEST['vScale']) ? (float) $_REQUEST['vScale'] : 0.6;
+$hScale = isset($_REQUEST['hScale']) ? (float) $_REQUEST['hScale'] : 0.6;
 
 $config = parse_ini_file('./config/altoview.ini');
+if ($config === false) {
+    die('Failed to read the configuration file.');
+}
+
+$availableImages = AltoViewer::listAvailableFiles($config['altoDir'], $config['imageDir']);
+if (count($availableImages) === 0) {
+    die('No ALTO files with associated images were found.');
+}
+
+$requestedImage = isset($_REQUEST['image']) ? (string) $_REQUEST['image'] : null;
+if (empty($requestedImage) || !in_array($requestedImage, $availableImages, true)) {
+    $image = $availableImages[0];
+} else {
+    $image = $requestedImage;
+}
+
+$currentIndex = array_search($image, $availableImages, true);
+$prevImage = ($currentIndex > 0) ? $availableImages[$currentIndex - 1] : null;
+$nextImage = ($currentIndex < count($availableImages) - 1) ? $availableImages[$currentIndex + 1] : null;
+
+$baseQuery = array(
+    'vScale' => $vScale,
+    'hScale' => $hScale
+);
+
+$prevUrl = $prevImage ? ('?' . http_build_query(array_merge($baseQuery, array('image' => $prevImage)))) : null;
+$nextUrl = $nextImage ? ('?' . http_build_query(array_merge($baseQuery, array('image' => $nextImage)))) : null;
 
 $altoViewer = new AltoViewer(   $config['altoDir'], 
                                 $config['imageDir'], 
@@ -43,6 +69,20 @@ $scaledWidth = $imageSize[0] * $hScale;
     </head>
     <body>
         <div class="menu">
+            <div class="menuBox nav-controls">
+                <span>Navigate pages</span><br />
+                <a 
+                    class="nav-arrow <?php echo $prevUrl ? '' : 'disabled'; ?>" 
+                    <?php if ($prevUrl) { ?>href="<?php echo $prevUrl; ?>"<?php } ?>
+                    title="Previous">&larr;</a>
+                <span class="nav-status">
+                    <?php echo ($currentIndex + 1) . ' / ' . count($availableImages); ?>
+                </span>
+                <a 
+                    class="nav-arrow <?php echo $nextUrl ? '' : 'disabled'; ?>" 
+                    <?php if ($nextUrl) { ?>href="<?php echo $nextUrl; ?>"<?php } ?>
+                    title="Next">&rarr;</a>
+            </div>
             <div class="menuBox" id="toggleBox">
                 <span>Toggle Layers</span><br />
                 <button id="strings" >Strings</button><br />
@@ -50,11 +90,15 @@ $scaledWidth = $imageSize[0] * $hScale;
                 <button id="blocks" >TextBlock</button><br />
                 <button id="printspace" >PrintSpace</button><br />
             </div>
+            <div class="menuBox" id="infoBox">
+                <span>Selected text</span>
+                <div id="regionText">Hover over a region.</div>
+            </div>
         </div>
         
         <div id="image">
             <img 
-                src="images/<?php echo $image; ?>.tif.png" 
+                src="image.php?file=<?php echo urlencode($image); ?>"  
                 width="<?php echo $scaledWidth; ?>" 
                 height="<?php echo $scaledHeight; ?>" />
             <?php foreach ($strings as $string) { ?>
@@ -63,7 +107,8 @@ $scaledWidth = $imageSize[0] * $hScale;
                             top: <?php echo $string->getVPos(); ?>px; 
                             width: <?php echo $string->getWidth(); ?>px; 
                             height: <?php echo $string->getHeight(); ?>px; 
-                            filter: alpha(opacity=50)" >
+                            filter: alpha(opacity=50)" 
+                    data-content="<?php echo htmlspecialchars($string->getContent(), ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
             <?php } ?>
             <script>
@@ -78,7 +123,8 @@ $scaledWidth = $imageSize[0] * $hScale;
                             top: <?php echo $textLine->getVPos(); ?>px; 
                             width: <?php echo $textLine->getWidth(); ?>px; 
                             height: <?php echo $textLine->getHeight(); ?>px; 
-                            filter: alpha(opacity=50)" >
+                            filter: alpha(opacity=50)" 
+                    data-content="<?php echo htmlspecialchars($textLine->getContent(), ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
             <?php } ?>
             <script>
@@ -93,7 +139,8 @@ $scaledWidth = $imageSize[0] * $hScale;
                             top: <?php echo $textBlock->getVPos(); ?>px; 
                             width: <?php echo $textBlock->getWidth(); ?>px; 
                             height: <?php echo $textBlock->getHeight(); ?>px; 
-                            filter: alpha(opacity=50)" >
+                            filter: alpha(opacity=50)" 
+                    data-content="<?php echo htmlspecialchars($textBlock->getContent(), ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
             <?php } ?>
             <script>
@@ -107,12 +154,33 @@ $scaledWidth = $imageSize[0] * $hScale;
                         top: <?php echo $printSpace->getVPos(); ?>px; 
                         width: <?php echo $printSpace->getWidth(); ?>px; 
                         height: <?php echo $printSpace->getHeight(); ?>px; 
-                        filter: alpha(opacity=50)" >
+                        display: none;
+                        filter: alpha(opacity=50)" 
+                data-content="<?php echo htmlspecialchars($printSpace->getContent(), ENT_QUOTES, 'UTF-8'); ?>">
             </div>
             <script>
                 $("button[id*=printspace]").click(function () {
                 $("div[id*=highlight-printspace]").toggle();
                 });    
+            </script>
+
+            <script>
+                $(function () {
+                    var $regionText = $("#regionText");
+                    $(".highlighter").hover(
+                        function () {
+                            var text = $(this).attr("data-content");
+                            if (text && text.length) {
+                                $regionText.text(text);
+                            } else {
+                                $regionText.text("No text available.");
+                            }
+                        },
+                        function () {
+                            $regionText.text("Hover over a region.");
+                        }
+                    );
+                });
             </script>
             
                     

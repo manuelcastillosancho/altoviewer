@@ -1,5 +1,4 @@
-ALTO Viewer
------------
+## ALTO Viewer
 
 This viewer was developed to give a visual representation of ALTO XML Files.
 For more infromation on the ALTO XML standard, see the Library of Congress website: http://www.loc.gov/standards/alto/
@@ -11,3 +10,10 @@ Configuration of the ALTO file location and Image file locations can be done in 
 Also image scaling can be applied to the image. This does nothing more than alter the height and width attributes of the XHTML img tag, and alters all co-ordinate data accordingly to the ratios set in the URL (0.3 on both axis in this example)
 
 http://altoviewer.macdanosx.llgc.org.uk/?vScale=0.3&hScale=0.3&image=accaa00100072
+
+## Recent Enhancements
+
+- Page navigation with arrow buttons plus automatic load of the first available image.
+- Default scale set to `0.6` for a comfortable initial view.
+- New `image.php` endpoint that serves images from the configured directory without exposing absolute paths.
+- Sidebar panel showing region text when hovering Strings/TextLines/TextBlocks.

@@ -25,6 +25,8 @@ class AltoElement
     protected $_height;
 
     protected $_width;
+
+    protected $_content = '';
     
     /**
      * @param DOMElement $element ALTO Element 
@@ -33,10 +35,11 @@ class AltoElement
     {
         $this->_type = $element->tagName;
         $this->_id = $element->getAttribute('ID');
-        $this->_hPos = $element->getAttribute('HPOS');
-        $this->_vPos = $element->getAttribute('VPOS');
-        $this->_height = $element->getAttribute('HEIGHT');
-        $this->_width = $element->getAttribute('WIDTH');
+        $this->_hPos = (float) $element->getAttribute('HPOS');
+        $this->_vPos = (float) $element->getAttribute('VPOS');
+        $this->_height = (float) $element->getAttribute('HEIGHT');
+        $this->_width = (float) $element->getAttribute('WIDTH');
+        $this->_content = $this->_extractContent($element);
     }
     
     /**
@@ -86,5 +89,36 @@ class AltoElement
     public function getWidth() 
     {
         return $this->_width;
+    }
+
+    /**
+     * Get textual content associated with the element
+     * @return string
+     */
+    public function getContent()
+    {
+        return $this->_content;
+    }
+
+    /**
+     * Extract text content from an ALTO element
+     * @param DOMElement $element
+     * @return string
+     */
+    protected function _extractContent($element)
+    {
+        if ($element->hasAttribute('CONTENT')) {
+            return trim($element->getAttribute('CONTENT'));
+        }
+
+        $textParts = array();
+        $strings = $element->getElementsByTagName('String');
+        foreach ($strings as $string) {
+            if ($string->hasAttribute('CONTENT')) {
+                $textParts[] = trim($string->getAttribute('CONTENT'));
+            }
+        }
+
+        return trim(implode(' ', $textParts));
     }
 }

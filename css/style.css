@@ -52,6 +52,7 @@ dd {
 
 .menu {
     float: right;
+    width: 320px;
 }
 
 .menuBox {
@@ -60,9 +61,53 @@ dd {
     background-color: #2B2B2B;
 }
 
+.nav-controls {
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.nav-arrow {
+    display: inline-block;
+    margin: 5px 10px;
+    padding: 5px 10px;
+    border: 1px solid #555;
+    color: #DCDCDC;
+    text-decoration: none;
+    font-size: 1.2em;
+}
+
+.nav-arrow:hover {
+    background-color: #3C3C3C;
+}
+
+.nav-arrow.disabled {
+    opacity: 0.3;
+    pointer-events: none;
+    border-color: #333;
+}
+
+.nav-status {
+    font-size: 0.9em;
+}
+
 #toggleBox {
     display: block;
 }
 #infoBox {
     display: block;
+    margin-top: 10px;
+}
+
+#regionText {
+    margin-top: 8px;
+    min-height: 60px;
+    max-height: 180px;
+    font-size: 0.85em;
+    line-height: 1.3em;
+    padding: 8px;
+    background-color: #1f1f1f;
+    border: 1px solid #444;
+    overflow-y: auto;
+    word-break: break-word;
+    white-space: normal;
 }
